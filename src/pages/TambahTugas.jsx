@@ -27,7 +27,7 @@ export default function TambahTugas({ onAdd, onNavigate }) {
       setTimeout(() => setShake(false), 500);
       return;
     }
-    const success = onAdd(text, category, deadline, "manual", priority);
+    const success = onAdd(text, category, deadline, "manual", priority, addToCalendar);
     if (success) {
       // Buka Google Calendar jika checkbox aktif dan ada deadline
       if (addToCalendar) {

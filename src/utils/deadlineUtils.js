@@ -114,8 +114,14 @@ export function buildGoogleCalendarUrl(task) {
   const details = encodeURIComponent(`Kategori: ${task.category}\nDibuat via Plan Saya`);
   let dates = "";
   if (task.deadline) {
-    const start = new Date(task.deadline);
-    const end = new Date(start.getTime() + 60 * 60 * 1000); // +1 jam
+    const end = new Date(task.deadline);
+    const start = new Date(); // Start event from now
+    
+    // If deadline is in the past, fallback to a 1 hour event from now
+    if (end < start) {
+      end.setTime(start.getTime() + 60 * 60 * 1000);
+    }
+    
     const fmt = (d) =>
       d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
     dates = `${fmt(start)}/${fmt(end)}`;

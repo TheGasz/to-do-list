@@ -132,6 +132,12 @@ export default function TaskItem({ task, onToggle, onDelete, onEdit }) {
             </span>
           )}
 
+          {task.hasGcal && (
+            <span style={{ ...styles.badge, background: "rgba(66,133,244,0.15)", color: "#4285f4", border: "1px solid rgba(66,133,244,0.3)" }} title="Tersimpan di Google Calendar">
+              📅 GCal
+            </span>
+          )}
+
           <span style={{ ...styles.catTag, background: catColor + "18", color: catColor, border: `1px solid ${catColor}30` }}>
             {task.category}
           </span>
@@ -160,7 +166,12 @@ export default function TaskItem({ task, onToggle, onDelete, onEdit }) {
           rel="noopener noreferrer"
           style={styles.actionBtn}
           title="Tambah ke Google Calendar"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!task.hasGcal) {
+              onEdit(task.id, { hasGcal: true });
+            }
+          }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>

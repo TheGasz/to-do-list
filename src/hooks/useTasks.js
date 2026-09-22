@@ -140,7 +140,7 @@ export function useTasks() {
     }, 2500);
   }, []);
 
-  const addTask = useCallback((text, category, deadline, source = "manual", priority = "normal") => {
+  const addTask = useCallback((text, category, deadline, source = "manual", priority = "normal", hasGcal = false) => {
     if (!text.trim()) return false;
     const newId = genId().toString();
     const newTask = {
@@ -151,6 +151,7 @@ export function useTasks() {
       deadline: deadline || "",
       source,
       priority,
+      hasGcal,
       createdAt: new Date().toISOString(),
     };
     
