@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CATEGORIES, CATEGORY_COLORS } from "../utils/deadlineUtils";
+import { CATEGORIES, CATEGORY_COLORS, buildGoogleCalendarUrl } from "../utils/deadlineUtils";
 
 const PRIORITY_OPTIONS = [
   { value: "low",    label: "Rendah",  icon: "🟢", color: "#10b981" },
@@ -15,6 +15,7 @@ export default function TambahTugas({ onAdd, onNavigate }) {
   const [note, setNote] = useState("");
   const [added, setAdded] = useState(false);
   const [shake, setShake] = useState(false);
+  const [addToCalendar, setAddToCalendar] = useState(true);
 
   const now = new Date();
   now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -28,12 +29,18 @@ export default function TambahTugas({ onAdd, onNavigate }) {
     }
     const success = onAdd(text, category, deadline, "manual", priority);
     if (success) {
+      // Buka Google Calendar jika checkbox aktif dan ada deadline
+      if (addToCalendar) {
+        const tempTask = { text: text.trim(), deadline, category, priority };
+        const calUrl = buildGoogleCalendarUrl(tempTask);
+        window.open(calUrl, "_blank", "noopener,noreferrer");
+      }
       setAdded(true);
       setText("");
       setDeadline("");
       setNote("");
       setPriority("normal");
-      setTimeout(() => setAdded(false), 2000);
+      setTimeout(() => setAdded(false), 2500);
     }
   };
 
@@ -121,6 +128,21 @@ export default function TambahTugas({ onAdd, onNavigate }) {
           </div>
         </div>
 
+        {/* Google Calendar toggle */}
+        <div style={styles.gcalToggle}>
+          <label style={styles.gcalLabel}>
+            <input
+              type="checkbox"
+              checked={addToCalendar}
+              onChange={(e) => setAddToCalendar(e.target.checked)}
+              style={styles.gcalCheckbox}
+            />
+            <span style={styles.gcalText}>
+              📅 Tambah ke Google Calendar setelah simpan
+            </span>
+          </label>
+        </div>
+
         {/* Submit */}
         <button
           style={{
@@ -160,10 +182,12 @@ export default function TambahTugas({ onAdd, onNavigate }) {
 
 const styles = {
   wrap: {
-    padding: "32px 36px",
+    padding: "24px 20px",
     maxWidth: 680,
     overflowY: "auto",
     height: "100%",
+    boxSizing: "border-box",
+    width: "100%",
   },
   header: { marginBottom: 28 },
   title: { fontSize: 26, fontWeight: 800, color: "#fff", margin: "0 0 6px" },
@@ -279,5 +303,24 @@ const styles = {
     flexDirection: "column",
     gap: 7,
     lineHeight: 1.5,
+  },
+  gcalToggle: {
+    display: "flex",
+    alignItems: "center",
+    padding: "12px 16px",
+    background: "rgba(66,133,244,0.08)",
+    border: "1px solid rgba(66,133,244,0.2)",
+    borderRadius: 12,
+    marginTop: -8,
+  },
+  gcalLabel: {
+    display: "flex", alignItems: "center", gap: 10,
+    cursor: "pointer", width: "100%",
+  },
+  gcalCheckbox: {
+    width: 16, height: 16, cursor: "pointer", accentColor: "#4285f4",
+  },
+  gcalText: {
+    color: "rgba(255,255,255,0.65)", fontSize: 13, fontWeight: 500,
   },
 };
