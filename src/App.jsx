@@ -115,9 +115,7 @@ export default function App() {
 
       {/* Main shell */}
       <div style={styles.shell} className="app-shell">
-        <div style={styles.sidebar} className="app-sidebar">
-          <Sidebar activePage={activePage} onNavigate={setActivePage} />
-        </div>
+        <Sidebar activePage={activePage} onNavigate={setActivePage} />
 
         {/* Main content area */}
         <main style={styles.main} className="app-main">
@@ -258,9 +256,6 @@ if (typeof document !== "undefined" && !document.getElementById("app-keyframes")
       .app-main {
         padding-bottom: 80px !important;
         height: 100dvh !important;
-      }
-      .app-sidebar {
-        display: none !important;
       }
     }
   `;

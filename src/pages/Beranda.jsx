@@ -53,7 +53,7 @@ export default function Beranda({ tasks, stats, onToggle, onDelete, onEdit }) {
             </div>
           )}
           <div style={styles.taskCountChip}>
-            {tasks.length} rencana
+            {totalUndone} rencana
           </div>
         </div>
       </div>
