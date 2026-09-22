@@ -115,9 +115,9 @@ export function buildGoogleCalendarUrl(task) {
   let dates = "";
   if (task.deadline) {
     const end = new Date(task.deadline);
-    const start = new Date(); // Start event from now
+    const start = task.createdAt ? new Date(task.createdAt) : new Date(); // Start event from creation date
     
-    // If deadline is in the past, fallback to a 1 hour event from now
+    // If deadline is in the past, fallback to a 1 hour event from start
     if (end < start) {
       end.setTime(start.getTime() + 60 * 60 * 1000);
     }
