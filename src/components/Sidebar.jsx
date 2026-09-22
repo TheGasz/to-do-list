@@ -6,8 +6,9 @@ const NAV_ITEMS = [
   {
     id: "beranda",
     label: "Beranda",
+    shortLabel: "Beranda",
     icon: (active) => (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#c4b5fd" : "rgba(255,255,255,0.4)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? "#c4b5fd" : "rgba(255,255,255,0.45)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
         <polyline points="9,22 9,12 15,12 15,22"/>
       </svg>
@@ -16,8 +17,9 @@ const NAV_ITEMS = [
   {
     id: "tambah",
     label: "Tambah Tugas",
+    shortLabel: "Tambah",
     icon: (active) => (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#c4b5fd" : "rgba(255,255,255,0.4)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? "#c4b5fd" : "rgba(255,255,255,0.45)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10"/>
         <line x1="12" y1="8" x2="12" y2="16"/>
         <line x1="8" y1="12" x2="16" y2="12"/>
@@ -27,8 +29,9 @@ const NAV_ITEMS = [
   {
     id: "aktivitas",
     label: "Aktivitas",
+    shortLabel: "Aktivitas",
     icon: (active) => (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#c4b5fd" : "rgba(255,255,255,0.4)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? "#c4b5fd" : "rgba(255,255,255,0.45)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <line x1="18" y1="20" x2="18" y2="10"/>
         <line x1="12" y1="20" x2="12" y2="4"/>
         <line x1="6" y1="20" x2="6" y2="14"/>
@@ -38,8 +41,9 @@ const NAV_ITEMS = [
   {
     id: "lms",
     label: "LMS",
+    shortLabel: "LMS",
     icon: (active) => (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#c4b5fd" : "rgba(255,255,255,0.4)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? "#c4b5fd" : "rgba(255,255,255,0.45)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
         <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
       </svg>
@@ -47,59 +51,59 @@ const NAV_ITEMS = [
   },
 ];
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  return isMobile;
+}
+
 export default function Sidebar({ activePage, onNavigate }) {
   const [collapsed, setCollapsed] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [user, setUser] = useState(auth?.currentUser || null);
-
-  useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      if (!mobile) setMobileOpen(false);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const [user, setUser] = useState(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!auth) return;
     return auth.onAuthStateChanged((u) => setUser(u));
   }, []);
 
-  const handleNavigate = (id) => {
-    onNavigate(id);
-    if (isMobile) setMobileOpen(false);
-  };
-
-  // ── Mobile Bottom Nav ────────────────────────────────────────────────────
+  // ─── Mobile Bottom Navigation Bar ──────────────────────────────────────────
   if (isMobile) {
     return (
-      <>
-        <nav style={mobileStyles.bottomNav}>
-          {NAV_ITEMS.map((item) => {
-            const isActive = activePage === item.id;
-            return (
-              <button
-                key={item.id}
-                style={{ ...mobileStyles.mobileNavBtn, ...(isActive ? mobileStyles.mobileNavBtnActive : {}) }}
-                onClick={() => handleNavigate(item.id)}
-                title={item.label}
-              >
-                {item.icon(isActive)}
-                <span style={{ ...mobileStyles.mobileNavLabel, color: isActive ? "#c4b5fd" : "rgba(255,255,255,0.4)" }}>
-                  {item.label.split(" ")[0]}
-                </span>
-              </button>
-            );
-          })}
-        </nav>
-      </>
+      <nav style={mobileStyles.bottomNav}>
+        {NAV_ITEMS.map((item) => {
+          const isActive = activePage === item.id;
+          return (
+            <button
+              key={item.id}
+              style={{
+                ...mobileStyles.navBtn,
+                ...(isActive ? mobileStyles.navBtnActive : {}),
+              }}
+              onClick={() => onNavigate(item.id)}
+              title={item.label}
+            >
+              {item.icon(isActive)}
+              <span style={{
+                fontSize: 10, fontWeight: 600, marginTop: 2,
+                color: isActive ? "#c4b5fd" : "rgba(255,255,255,0.4)",
+                transition: "color 0.2s",
+              }}>
+                {item.shortLabel}
+              </span>
+              {isActive && <div style={mobileStyles.activeDot} />}
+            </button>
+          );
+        })}
+      </nav>
     );
   }
 
-  // ── Desktop Sidebar ──────────────────────────────────────────────────────
+  // ─── Desktop Sidebar ────────────────────────────────────────────────────────
   return (
     <aside style={{ ...styles.sidebar, width: collapsed ? 64 : 220 }}>
       {/* Logo */}
@@ -134,7 +138,7 @@ export default function Sidebar({ activePage, onNavigate }) {
                 color: isActive ? "#c4b5fd" : "rgba(255,255,255,0.4)",
                 justifyContent: collapsed ? "center" : "flex-start",
               }}
-              onClick={() => handleNavigate(item.id)}
+              onClick={() => onNavigate(item.id)}
               title={item.label}
             >
               {item.icon(isActive)}
@@ -145,20 +149,21 @@ export default function Sidebar({ activePage, onNavigate }) {
       </nav>
 
       {/* User Profile */}
-      {user && !collapsed && (
-        <div style={styles.userProfile}>
-          <img src={user.photoURL} alt="Profile" style={styles.userAvatar} />
-          <div style={styles.userInfo}>
-            <div style={styles.userName}>{user.displayName}</div>
-            <button style={styles.logoutBtn} onClick={() => signOut(auth)}>
-              Logout
-            </button>
-          </div>
-        </div>
-      )}
-      {user && collapsed && (
-        <div style={{ padding: "12px 0", display: "flex", justifyContent: "center" }}>
-          <img src={user.photoURL} alt="Profile" style={{ ...styles.userAvatar, cursor: "pointer" }} onClick={() => signOut(auth)} title="Logout" />
+      {user && (
+        <div style={{ ...styles.userProfile, justifyContent: collapsed ? "center" : "flex-start" }}>
+          <img
+            src={user.photoURL}
+            alt="Profile"
+            style={styles.userAvatar}
+            onClick={collapsed ? () => signOut(auth) : undefined}
+            title={collapsed ? "Logout" : undefined}
+          />
+          {!collapsed && (
+            <div style={styles.userInfo}>
+              <div style={styles.userName}>{user.displayName}</div>
+              <button style={styles.logoutBtn} onClick={() => signOut(auth)}>Logout</button>
+            </div>
+          )}
         </div>
       )}
 
@@ -172,7 +177,7 @@ export default function Sidebar({ activePage, onNavigate }) {
         >
           <svg
             width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            stroke="rgba(255,255,255,0.3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
             style={{ transition: "transform 0.3s", transform: collapsed ? "rotate(180deg)" : "rotate(0deg)" }}
           >
             <polyline points="15,18 9,12 15,6"/>
@@ -184,25 +189,20 @@ export default function Sidebar({ activePage, onNavigate }) {
   );
 }
 
+// ─── Desktop Styles ──────────────────────────────────────────────────────────
 const styles = {
   sidebar: {
     height: "100vh",
-    background: "rgba(12,10,30,0.95)",
+    background: "rgba(12,10,30,0.97)",
     backdropFilter: "blur(20px)",
     borderRight: "1px solid rgba(255,255,255,0.06)",
-    display: "flex",
-    flexDirection: "column",
-    flexShrink: 0,
-    position: "sticky",
-    top: 0,
+    display: "flex", flexDirection: "column",
+    flexShrink: 0, position: "sticky", top: 0,
     overflow: "hidden",
     transition: "width 0.3s cubic-bezier(0.4,0,0.2,1)",
     zIndex: 50,
   },
-  logoWrap: {
-    display: "flex", alignItems: "center", gap: 10,
-    padding: "20px 16px 16px", overflow: "hidden",
-  },
+  logoWrap: { display: "flex", alignItems: "center", gap: 10, padding: "20px 16px 16px", overflow: "hidden" },
   logoIcon: {
     width: 36, height: 36, borderRadius: 10,
     background: "linear-gradient(135deg, #7c3aed, #4f46e5)",
@@ -213,7 +213,7 @@ const styles = {
   logoTitle: { color: "#fff", fontWeight: 800, fontSize: 15, whiteSpace: "nowrap" },
   logoSub: { color: "rgba(255,255,255,0.3)", fontSize: 10, whiteSpace: "nowrap", textTransform: "uppercase", letterSpacing: "1px" },
   divider: { height: "1px", background: "rgba(255,255,255,0.05)", margin: "4px 0" },
-  nav: { flex: 1, display: "flex", flexDirection: "column", gap: 2, padding: "8px 8px" },
+  nav: { flex: 1, display: "flex", flexDirection: "column", gap: 2, padding: "8px" },
   navBtn: {
     display: "flex", alignItems: "center", gap: 10,
     width: "100%", padding: "10px 12px", borderRadius: 10,
@@ -224,10 +224,10 @@ const styles = {
   navLabel: { overflow: "hidden", textOverflow: "ellipsis" },
   userProfile: {
     display: "flex", alignItems: "center", gap: 10,
-    padding: "12px 16px",
+    padding: "12px 14px",
     borderTop: "1px solid rgba(255,255,255,0.05)",
   },
-  userAvatar: { width: 32, height: 32, borderRadius: "50%", border: "2px solid #a78bfa", flexShrink: 0 },
+  userAvatar: { width: 32, height: 32, borderRadius: "50%", border: "2px solid #a78bfa", flexShrink: 0, cursor: "pointer" },
   userInfo: { display: "flex", flexDirection: "column", overflow: "hidden" },
   userName: { color: "#fff", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
   logoutBtn: { background: "none", border: "none", color: "rgba(255,255,255,0.35)", fontSize: 11, cursor: "pointer", padding: 0, textAlign: "left", marginTop: 2 },
@@ -241,29 +241,32 @@ const styles = {
   },
 };
 
+// ─── Mobile Styles ───────────────────────────────────────────────────────────
 const mobileStyles = {
   bottomNav: {
     position: "fixed", bottom: 0, left: 0, right: 0,
-    height: 64,
-    background: "rgba(12,10,30,0.98)",
+    height: 68,
+    background: "rgba(8,6,24,0.98)",
     backdropFilter: "blur(24px)",
+    WebkitBackdropFilter: "blur(24px)",
     borderTop: "1px solid rgba(255,255,255,0.08)",
     display: "flex", alignItems: "center", justifyContent: "space-around",
-    zIndex: 100,
-    paddingBottom: "env(safe-area-inset-bottom)",
+    zIndex: 1000,
+    paddingBottom: "env(safe-area-inset-bottom, 0px)",
   },
-  mobileNavBtn: {
-    display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-    flex: 1, padding: "8px 0",
+  navBtn: {
+    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+    gap: 3, flex: 1, height: "100%",
     background: "transparent", border: "none", cursor: "pointer",
     fontFamily: "'Outfit', sans-serif",
-    transition: "all 0.2s",
+    transition: "all 0.2s", position: "relative",
+    padding: "8px 4px",
   },
-  mobileNavBtnActive: {
-    background: "rgba(167,139,250,0.08)",
-    borderRadius: 12,
+  navBtnActive: {
+    background: "rgba(167,139,250,0.07)",
   },
-  mobileNavLabel: {
-    fontSize: 10, fontWeight: 600,
+  activeDot: {
+    position: "absolute", bottom: 6, width: 4, height: 4,
+    borderRadius: "50%", background: "#a78bfa",
   },
 };
