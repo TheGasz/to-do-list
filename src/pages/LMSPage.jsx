@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useGoogleLogin } from '@react-oauth/google';
 import { formatDeadlineFull, getDeadlineStatus, CATEGORY_COLORS } from "../utils/deadlineUtils";
 import { fetchAndParseElokICS } from "../utils/icsUtils";
 
@@ -111,6 +112,67 @@ export default function LMSPage({ tasks, onImport, onToggle, onDelete }) {
   
   const [elokUrl, setElokUrl] = useState(localStorage.getItem("elok_ics_url") || "");
   const [isSyncing, setIsSyncing] = useState(false);
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setIsSyncing(true);
+      setError("");
+      setSuccess("");
+      try {
+        const timeMin = new Date().toISOString();
+        const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${timeMin}&maxResults=30&singleEvents=true&orderBy=startTime`, {
+          headers: {
+            Authorization: `Bearer ${tokenResponse.access_token}`,
+          },
+        });
+        const data = await res.json();
+        
+        if (!data.items || data.items.length === 0) {
+          setSuccess("✅ Sync berhasil. Tapi tidak ada event/tugas di Google Calendar kamu.");
+          return;
+        }
+
+        const existingTasks = tasks.filter(t => t.source === "gcr");
+        let addedCount = 0;
+        const tasksToImport = [];
+
+        for (const event of data.items) {
+          if (!event.summary || (!event.start.dateTime && !event.start.date)) continue;
+          
+          const text = event.summary.trim();
+          // Filter duplicates
+          const isDuplicate = existingTasks.some(ext => ext.text.toLowerCase() === text.toLowerCase());
+          
+          if (!isDuplicate) {
+            let deadline = event.start.dateTime || `${event.start.date}T23:59:00`;
+            deadline = deadline.slice(0, 16); // format to local datetime string for input
+            
+            tasksToImport.push({
+              text,
+              deadline,
+              source: 'gcr',
+              category: '📚 Tugas',
+            });
+            addedCount++;
+          }
+        }
+
+        if (tasksToImport.length > 0) {
+          onImport(tasksToImport);
+          setSuccess(`✅ ${addedCount} tugas baru berhasil di-sync dari Google Calendar!`);
+        } else {
+          setSuccess(`✅ Sync berhasil. Tidak ada tugas baru.`);
+        }
+      } catch (err) {
+        setError("Gagal mengambil data dari Google Calendar.");
+        console.error(err);
+      } finally {
+        setIsSyncing(false);
+      }
+    },
+    onError: (error) => setError(`Login Gagal: ${error.error_description || "Unknown Error"}`),
+    scope: 'https://www.googleapis.com/auth/calendar.readonly'
+  });
 
   const platform = LMS_PLATFORMS.find((p) => p.id === activePlatform);
   const lmsTasks = tasks.filter((t) => t.source && t.source !== "manual");
@@ -268,8 +330,71 @@ export default function LMSPage({ tasks, onImport, onToggle, onDelete }) {
                   {isSyncing ? "🔄 Membaca Kalender Elok..." : "🔄 Sinkronisasi Sekarang"}
                 </button>
               </>
+            ) : activePlatform === "gcr" ? (
+              // FORM GOOGLE CALENDAR
+              <>
+                <div style={styles.apiNotice}>
+                  <span>🗓️</span>
+                  <span><strong>Google Calendar:</strong> Sinkronisasi otomatis tugas-tugas dari kalendermu. Pastikan kamu memberi izin akses kalender saat popup Google muncul.</span>
+                </div>
+
+                {error && <div style={styles.errorMsg}>{error}</div>}
+                {success && <div style={styles.successMsg}>{success}</div>}
+
+                <button
+                  style={{ 
+                    ...styles.importBtn, 
+                    background: `linear-gradient(135deg, ${platform.color}, ${platform.color}cc)`,
+                    opacity: isSyncing ? 0.6 : 1,
+                    cursor: isSyncing ? "not-allowed" : "pointer",
+                    marginBottom: 16
+                  }}
+                  onClick={() => googleLogin()}
+                  disabled={isSyncing}
+                >
+                  {isSyncing ? "🔄 Membaca Google Calendar..." : "🔗 Sync dengan Google Calendar"}
+                </button>
+
+                <div style={styles.rowsHeader}>
+                  <span style={styles.rowsLabel}>Atau Input Manual</span>
+                  <button style={styles.addRowBtn} onClick={addRow}>+ Baris</button>
+                </div>
+
+                <div style={styles.rowsList}>
+                  {rows.map((row, i) => (
+                    <div key={i} style={styles.inputRow}>
+                      <div style={{ ...styles.rowNum, borderColor: platform.color + "40", color: platform.color }}>
+                        {i + 1}
+                      </div>
+                      <input
+                        style={styles.textInput}
+                        placeholder={`Tugas dari ${platform.label}...`}
+                        value={row.text}
+                        onChange={(e) => updateRow(i, "text", e.target.value)}
+                      />
+                      <input
+                        type="datetime-local"
+                        style={styles.dateInput}
+                        value={row.deadline}
+                        min={minDatetime}
+                        onChange={(e) => updateRow(i, "deadline", e.target.value)}
+                      />
+                      {rows.length > 1 && (
+                        <button style={styles.removeRowBtn} onClick={() => removeRow(i)}>×</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  style={{ ...styles.importBtn, background: `linear-gradient(135deg, ${platform.color}, ${platform.color}cc)` }}
+                  onClick={handleImport}
+                >
+                  📥 Tambah {rows.filter((r) => r.text.trim()).length || ""} Tugas Manual
+                </button>
+              </>
             ) : (
-              // FORM MANUAL UNTUK TEAMS / GCR
+              // FORM MANUAL UNTUK TEAMS
               <>
                 <div style={styles.apiNotice}>
                   <span>🔗</span>

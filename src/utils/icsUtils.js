@@ -64,8 +64,8 @@ function parseICSDate(icsDateStr) {
 
 export async function fetchAndParseElokICS(url) {
   try {
-    // Gunakan corsproxy.io untuk membypass batasan CORS browser ke Elok
-    const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(url);
+    // Gunakan allorigins.win sebagai fallback CORS proxy yang lebih stabil
+    const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(url);
     
     const response = await fetch(proxyUrl);
     if (!response.ok) {
@@ -73,6 +73,10 @@ export async function fetchAndParseElokICS(url) {
     }
     
     const icsText = await response.text();
+    if (!icsText.includes("BEGIN:VCALENDAR")) {
+      throw new Error("Format file tidak valid atau URL salah. Pastikan URL langsung mengarah ke file .ics.");
+    }
+
     const events = parseICS(icsText);
     
     const tasks = [];

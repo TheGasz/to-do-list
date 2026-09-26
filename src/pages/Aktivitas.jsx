@@ -137,7 +137,7 @@ export default function Aktivitas({ tasks, stats }) {
   return (
     <div style={styles.wrap}>
       {/* ── Page title ── */}
-      <div style={styles.topBar}>
+      <div className="top-bar" style={styles.topBar}>
         <div>
           <h1 style={styles.pageTitle}>📊 Aktivitas</h1>
           <p style={styles.pageSub}>Dashboard produktivitas kamu secara keseluruhan</p>
@@ -149,7 +149,7 @@ export default function Aktivitas({ tasks, stats }) {
       </div>
 
       {/* ── Level & XP banner ── */}
-      <div style={styles.levelBanner}>
+      <div className="level-banner" style={styles.levelBanner}>
         <div style={styles.levelLeft}>
           <div style={styles.levelIconWrap}>{cur.icon}</div>
           <div>
@@ -172,7 +172,7 @@ export default function Aktivitas({ tasks, stats }) {
       </div>
 
       {/* ── Metric cards ── */}
-      <div style={styles.metricsGrid}>
+      <div className="metrics-grid">
         <MetricCard emoji="🔥" value={stats.streak}          label="Hari Streak"    color="#f97316" sub="hari berturut-turut" />
         <MetricCard emoji="✅" value={doneTasks.length}       label="Selesai"        color="#10b981" sub={`dari ${tasks.length} total`} />
         <MetricCard emoji="⏳" value={pendingTasks.length}    label="Pending"        color="#facc15" sub="belum dikerjakan" />
@@ -181,7 +181,7 @@ export default function Aktivitas({ tasks, stats }) {
         <MetricCard emoji="📝" value={stats.totalAdded || 0}  label="Pernah Dibuat"  color="#ec4899" sub="tugas sepanjang masa" />
       </div>
 
-      <div style={styles.twoCol}>
+      <div className="two-col-grid">
         {/* ── LEFT: Category breakdown ── */}
         <div style={styles.panel}>
           <div style={styles.panelHeader}>
@@ -260,12 +260,12 @@ export default function Aktivitas({ tasks, stats }) {
 
       {/* ── Pending tasks full list ── */}
       {pendingTasks.length > 0 && (
-        <div style={{ ...styles.panel, margin: "0 36px 36px" }}>
+        <div className="panel-margin" style={styles.panel}>
           <div style={styles.panelHeader}>
             <span style={styles.panelTitle}>⏳ Semua Tugas Pending</span>
             <span style={styles.panelCount}>{pendingTasks.length}</span>
           </div>
-          <div style={styles.pendingGrid}>
+          <div className="pending-grid">
             {pendingTasks.map((t) => <PendingTaskRow key={t.id} task={t} />)}
           </div>
         </div>
@@ -279,8 +279,6 @@ const styles = {
   wrap: { overflowY: "auto", height: "100%", paddingBottom: 40 },
 
   topBar: {
-    display: "flex", justifyContent: "space-between", alignItems: "center",
-    padding: "32px 36px 20px",
     borderBottom: "1px solid rgba(255,255,255,0.05)",
   },
   pageTitle: { fontSize: 26, fontWeight: 800, color: "#fff", margin: "0 0 4px" },
@@ -295,8 +293,6 @@ const styles = {
 
   // Level banner
   levelBanner: {
-    display: "flex", alignItems: "center", gap: 20,
-    margin: "20px 36px",
     background: "linear-gradient(135deg, rgba(124,58,237,0.12), rgba(96,165,250,0.08))",
     border: "1px solid rgba(167,139,250,0.2)",
     borderRadius: 20, padding: "18px 22px",
@@ -311,7 +307,7 @@ const styles = {
   },
   levelTitle: { fontSize: 18, fontWeight: 800, color: "#c4b5fd" },
   levelMeta: { color: "rgba(255,255,255,0.35)", fontSize: 13, marginTop: 2 },
-  levelRight: { flex: 1 },
+  levelRight: { flex: 1, width: "100%" },
   nextLevelHint: { color: "rgba(255,255,255,0.4)", fontSize: 12, marginBottom: 8 },
   xpBarBg: { background: "rgba(255,255,255,0.06)", borderRadius: 100, height: 8, overflow: "hidden" },
   xpBarFill: {
@@ -326,11 +322,7 @@ const styles = {
   },
 
   // Metrics
-  metricsGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(6, 1fr)",
-    gap: 12, margin: "0 36px 24px",
-  },
+  metricsGrid: {}, // Moved to index.css
   metricCard: {
     background: "rgba(255,255,255,0.03)",
     border: "1px solid", borderRadius: 18,
@@ -346,10 +338,7 @@ const styles = {
   metricSub: { color: "rgba(255,255,255,0.2)", fontSize: 10, marginTop: 3 },
 
   // Two column
-  twoCol: {
-    display: "grid", gridTemplateColumns: "1fr 1fr",
-    gap: 16, margin: "0 36px 20px",
-  },
+  twoCol: {}, // Moved to index.css
   panel: {
     background: "rgba(255,255,255,0.025)",
     border: "1px solid rgba(255,255,255,0.06)",
@@ -426,10 +415,7 @@ const styles = {
   emptySmall: { color: "rgba(255,255,255,0.2)", fontSize: 13, textAlign: "center", padding: "20px 0" },
 
   // Pending
-  pendingGrid: {
-    display: "grid", gridTemplateColumns: "1fr 1fr",
-    gap: 0,
-  },
+  pendingGrid: {}, // Moved to index.css
   pendingRow: {
     display: "flex", alignItems: "flex-start", gap: 8,
     padding: "9px 0", borderBottom: "1px solid rgba(255,255,255,0.04)",

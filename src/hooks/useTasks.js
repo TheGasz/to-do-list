@@ -155,6 +155,46 @@ export function useTasks() {
       createdAt: new Date().toISOString(),
     };
     
+    // Auto-sync ke Google Calendar jika token tersedia & ada deadline
+    const gcalToken = localStorage.getItem("gcal_token");
+    if (gcalToken && deadline) {
+      const event = {
+        summary: text.trim(),
+        description: `Kategori: ${category} | Prioritas: ${priority}`,
+        start: {
+          dateTime: new Date(deadline).toISOString(),
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        },
+        end: {
+          dateTime: new Date(new Date(deadline).getTime() + 60 * 60 * 1000).toISOString(),
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        }
+      };
+
+      fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${gcalToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(event)
+      }).then(res => {
+        if (res.status === 401) {
+          localStorage.removeItem("gcal_token");
+          window.dispatchEvent(new Event("gcal_token_expired"));
+        } else if (res.ok) {
+          // Tandai bahwa task ini sudah masuk GCal
+          if (auth?.currentUser && db) {
+             updateDoc(doc(db, "users", auth.currentUser.uid, "tasks", newId), { hasGcal: true });
+          } else {
+             setTasks(prev => prev.map(t => t.id === newId ? { ...t, hasGcal: true } : t));
+          }
+        }
+      }).catch(err => console.error("Gagal auto-sync ke Google Calendar:", err));
+      
+      newTask.hasGcal = true; // asumsikan sukses sementara proses berjalan di background
+    }
+
     if (auth?.currentUser && db) {
       setDoc(doc(db, "users", auth.currentUser.uid, "tasks", newId), newTask);
       setStats((prev) => {

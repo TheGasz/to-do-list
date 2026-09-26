@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useGoogleLogin } from '@react-oauth/google';
 import { CATEGORIES, CATEGORY_COLORS } from "../utils/deadlineUtils";
 
 const PRIORITY_OPTIONS = [
@@ -14,6 +15,31 @@ export default function TaskInput({ onAdd }) {
   const [priority, setPriority] = useState("normal");
   const [showPriority, setShowPriority] = useState(false);
   const [shake, setShake] = useState(false);
+  const [gcalEnabled, setGcalEnabled] = useState(!!localStorage.getItem("gcal_token"));
+
+  useEffect(() => {
+    const handleExpired = () => setGcalEnabled(false);
+    window.addEventListener("gcal_token_expired", handleExpired);
+    return () => window.removeEventListener("gcal_token_expired", handleExpired);
+  }, []);
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: (tokenResponse) => {
+      localStorage.setItem("gcal_token", tokenResponse.access_token);
+      setGcalEnabled(true);
+    },
+    onError: (error) => console.error("Login Failed:", error),
+    scope: 'https://www.googleapis.com/auth/calendar.events'
+  });
+
+  const handleToggleGcal = () => {
+    if (gcalEnabled) {
+      localStorage.removeItem("gcal_token");
+      setGcalEnabled(false);
+    } else {
+      googleLogin();
+    }
+  };
 
   const handleAdd = () => {
     if (!text.trim()) {
@@ -119,6 +145,20 @@ export default function TaskInput({ onAdd }) {
             </div>
           )}
         </div>
+
+        {/* Auto-Sync GCal Toggle */}
+        <button
+          style={{
+            ...styles.priorityBtn,
+            background: gcalEnabled ? "rgba(66,133,244,0.15)" : "transparent",
+            borderColor: gcalEnabled ? "#4285f4" : "rgba(255,255,255,0.2)",
+            color: gcalEnabled ? "#4285f4" : "rgba(255,255,255,0.4)",
+          }}
+          onClick={handleToggleGcal}
+          title={gcalEnabled ? "Auto-Sync Google Calendar: ON" : "Auto-Sync Google Calendar: OFF"}
+        >
+          🗓️
+        </button>
 
         {/* Add button */}
         <button style={styles.addBtn} onClick={handleAdd}>
