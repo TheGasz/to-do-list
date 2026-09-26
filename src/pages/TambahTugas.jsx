@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { CATEGORIES, CATEGORY_COLORS, buildGoogleCalendarUrl } from "../utils/deadlineUtils";
+import { useState, useEffect } from "react";
+import { CATEGORIES, CATEGORY_COLORS } from "../utils/deadlineUtils";
+import { useGoogleLogin } from '@react-oauth/google';
 
 const PRIORITY_OPTIONS = [
   { value: "low",    label: "Rendah",  icon: "🟢", color: "#10b981" },
@@ -15,7 +16,22 @@ export default function TambahTugas({ onAdd, onNavigate }) {
   const [note, setNote] = useState("");
   const [added, setAdded] = useState(false);
   const [shake, setShake] = useState(false);
-  const [addToCalendar, setAddToCalendar] = useState(true);
+  const [gcalEnabled, setGcalEnabled] = useState(!!localStorage.getItem("gcal_token"));
+
+  useEffect(() => {
+    const handleExpired = () => setGcalEnabled(false);
+    window.addEventListener("gcal_token_expired", handleExpired);
+    return () => window.removeEventListener("gcal_token_expired", handleExpired);
+  }, []);
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: (tokenResponse) => {
+      localStorage.setItem("gcal_token", tokenResponse.access_token);
+      setGcalEnabled(true);
+    },
+    onError: (error) => console.error("Login Failed:", error),
+    scope: 'https://www.googleapis.com/auth/calendar.events'
+  });
 
   const now = new Date();
   now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -27,14 +43,9 @@ export default function TambahTugas({ onAdd, onNavigate }) {
       setTimeout(() => setShake(false), 500);
       return;
     }
-    const success = onAdd(text, category, deadline, "manual", priority, addToCalendar);
+    // Jika gcalEnabled true dan ada deadline, useTasks akan otomatis POST ke Google API
+    const success = onAdd(text, category, deadline, "manual", priority, gcalEnabled);
     if (success) {
-      // Buka Google Calendar jika checkbox aktif dan ada deadline
-      if (addToCalendar) {
-        const tempTask = { text: text.trim(), deadline, category, priority };
-        const calUrl = buildGoogleCalendarUrl(tempTask);
-        window.open(calUrl, "_blank", "noopener,noreferrer");
-      }
       setAdded(true);
       setText("");
       setDeadline("");
@@ -133,12 +144,21 @@ export default function TambahTugas({ onAdd, onNavigate }) {
           <label style={styles.gcalLabel}>
             <input
               type="checkbox"
-              checked={addToCalendar}
-              onChange={(e) => setAddToCalendar(e.target.checked)}
+              checked={gcalEnabled}
+              onChange={(e) => {
+                if (!e.target.checked) {
+                  localStorage.removeItem("gcal_token");
+                  setGcalEnabled(false);
+                } else {
+                  // Mencegah checkbox tercentang langsung, panggil login dulu
+                  e.preventDefault();
+                  googleLogin();
+                }
+              }}
               style={styles.gcalCheckbox}
             />
             <span style={styles.gcalText}>
-              📅 Tambah ke Google Calendar setelah simpan
+              📅 Auto-Sync ke Google Calendar (Tanpa Buka Tab Baru)
             </span>
           </label>
         </div>
